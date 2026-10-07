@@ -1,0 +1,66 @@
+[tool.poetry]
+# The distribution name, which is what `pip install` asks for and what
+# importlib_metadata looks the running version up by -- see
+# iaspython/_core/version.py, which has to agree with it. A new name rather
+# than a new version of `lanternrock`: this line is numbered in four parts so
+# the policy service's agentVersion selectors can match it, and no four-part
+# number starting below 4 can outrank the lanternrock 3.1.0 already on the
+# index, so pip would never offer this as an upgrade.
+#
+# This distribution ships the pure-Python SDK and nothing else. The ctypes wrapper is
+# its own product, built from python/PythonWrapper, and still installs as
+# `lanternrock` -- so the two no longer claim the same import path.
+name = "IasPython"
+# Stamped over at publish time with 1.0.<build number>.0, by set_pyversion.py
+# and again by `poetry version`. The shape comes from BuildVersion in the
+# Jenkinsfile -- VersionMajor.VersionMinor.BUILD_NUMBER.VersionHotfix -- and
+# this line is only what a local `poetry build` produces. Keep the two in step.
+version = "1.0.0.0"
+packages = [{ include = "iaspython" }]
+description = "Generic in-app software telemetry solution."
+authors = [
+    "Zhang, Henry Zhihui <henry.zhihui.zhang@intel.com>",
+    "Drakeley, Graham <graham.drakeley@intel.com>",
+    "Magi, Caren <caren.magi@intel.com>"
+]
+license = "Apache-2.0"
+# No `include` for shared libraries: this SDK is pure Python and loads no
+# intel-ias3 binary. Those belong to the ctypes wrapper, and python/PythonWrapper
+# bundles them into its own wheel through its MANIFEST.in.
+
+[tool.poetry.dependencies]
+python = ">=3.11,<4"
+requests = ">=2.33.0"
+# Not imported here; declared because requests would otherwise let the consumer
+# pick it. 2.x builds its SSL context at TLS 1.2 minimum, and 2.8 bounds what a
+# decoder produces per read, so a gzip bomb cannot expand past our cap.
+urllib3 = ">=2.8.0"
+aiohttp = ">=3.14.3"
+aiofile = ">=3.8.1"
+py-cpuinfo = ">=9.0.0"
+psutil = ">=7.0.0"
+importlib-metadata = ">=8.7.0"
+zstandard = ">=0.23.0"
+
+[tool.poetry.group.dev.dependencies]
+isort = "^9.0.1"
+black = "^26.3.1"
+pre-commit = "^4.6.2"
+ipython = "^9.16.1"
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+src_paths = ["iaspython"]
+profile = "black"
+line_length = 120
+# lines_after_imports is deliberately unset: black >=24 collapses the blank
+# lines after an import block, so forcing 2 here makes isort and black undo
+# each other on every pre-commit run.
+multi_line_output = 3
+include_trailing_comma = true
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
