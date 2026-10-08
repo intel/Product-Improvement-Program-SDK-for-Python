@@ -1,12 +1,16 @@
 # In-App Telemetry Python SDK
 
-This is an In-App Telemetry Python SDK implemented entirely in Python. It exposes a more pythonic interface and relies on no C/C++ shared library.
+An In-App Telemetry SDK implemented entirely in Python. It exposes a pythonic
+interface and relies on no C/C++ shared library.
 
 ## Version
 
 The In-App Telemetry Python SDK is currently at version `1.0.0.0`.
 
 ## Configuration Notes
+
+<details>
+<summary>Click to expand configuration details</summary>
 
 Version `1.0.0.0` uploads telemetry as SKR records. A few options are worth knowing about.
 
@@ -110,109 +114,45 @@ that proxy or not at all. If the proxy is unreachable, flushes save to disk and
 are retried later, exactly as they are when the network is down. Check that
 `InternetProxy` is correct when telemetry stops arriving.
 
-# Table of Contents
-
-- [In-App Telemetry Python SDK](#in-app-telemetry-python-sdk)
-  - [Version](#version)
-  - [Configuration Notes](#configuration-notes)
-- [Table of Contents](#table-of-contents)
-- [Using In-App Telemetry](#using-in-app-telemetry)
-  - [Installation](#installation)
-    - [Pip](#pip)
-    - [Poetry](#poetry)
-  - [SDK Implementations](#sdk-implementations)
-    - [Wrapper](#wrapper)
-    - [IasPython](#iaspython)
-  - [Enabling Logging](#enabling-logging)
-  - [Running the Samples](#running-the-samples)
-  - [Update Dependencies](#update-dependencies)
-  - [Misc](#misc)
+</details>
 
 # Using In-App Telemetry
 
 ## Installation
 
-The package is published as **`IasPython`**, and the implementation is currently at `1.0`. Thus you will be provided with a `.whl` file. Versions are four-part — `MAJOR.MINOR.BUILD.HOTFIX` — so the current package line is `IasPython` `1.0.x.0`, where the third component is the build that produced it and the fourth marks a hotfix on that build. When installing it will automatically find and install the latest package available for the version of python you are currently running. For python >= 3.11 it will download version `1.0.x.0`. An attempt to install a package version that is outside the range of your python version will throw an error and not download. Install as follows:
-
-> **Note on the package name.** This SDK is published under a new distribution name, `IasPython`, rather than as a new version of `lanternrock`. The version line restarted at `1.0.0.0` (see below), which no version of `lanternrock` could express — pip would keep offering the older `lanternrock` `3.1.0` as the newer release. A new name sidesteps that entirely.
->
-> The import name matches: `import iaspython` is how you use it. The two distributions no longer share an import path, so `IasPython` and the older `lanternrock` can be installed side by side without either shadowing the other.
-
-> **Note on the version number.** The previous Lantern Rock SDK release was `3.1.0`, so this release is a lower number than the one before it. That is deliberate: the SDK has moved onto the SKR version line rather than continuing the Lantern Rock one, and it starts at `1.0.0.0` instead of carrying the old number forward — it cannot claim a version ahead of SKR itself. The first three components follow SemVer. See RFD-0194 for the full reasoning.
->
-> Upgrading from a 3.x release is **not** a drop-in: the public Python API, the configuration semantics, the validation behavior and the supported Python runtime all changed. Read the release notes before upgrading.
-
-### Pip
+The package is published as `IasPython` (import name `iaspython`). Versions
+are four-part (`MAJOR.MINOR.BUILD.HOTFIX`); pip installs the latest build for
+your Python version (3.11+) unless you pin one.
 
 ```
-pip install <lr-wheel>
+pip install <iaspython-wheel>
 
 pip uninstall IasPython
-
 ```
 
-### Poetry
+With Poetry:
 
 ```
-poetry add <lr-wheel>
+poetry add <iaspython-wheel>
 ```
 
-## SDK Implementations
+## Quick Usage
 
-### Wrapper
+```python
+from iaspython.sync import Telemetry
 
-The older Lantern Rock Python SDK — the wrapper around the native C/C++ shared library — is not part of this package. It remains a separate product, installed as `lanternrock` and imported as `import lanternrock`, and is unaffected by anything documented here.
+config = {
+    "AppName": "python-app",
+    "AppVersion": "1.0",
+    "TelemetryId": "28b1df84-7568-4be8-afa7-3324434e1cea",
+}
 
-### IasPython
-
-This SDK supports both asynchronous and synchronous styles, found under `iaspython.aio` and `iaspython.sync` respectively.
-
-## Enabling Logging
-
-This SDK supports both console and file logging. To enable logging, import and instantiate an instance of `TelemetryLogger` from either the async or sync code.
-
-```py
-from iaspython.aio import TelemetryLogger
-# OR
-from iaspython.sync import TelemetryLogger
-
-
-lr_logger = TelemetryLogger()
+with Telemetry(config) as telemetry:
+    telemetry.record_event("AppStarted")
+    telemetry.flush()
 ```
 
-Then use the following methods in order to configure your logs:
-
-```py
-lr_logger.set_console("INFO")
-lr_logger.set_file("INFO", "/path/to/telemetry.log")
-```
-
-Valid logging levels can be found in Python's `logging` built-in.
-
-## Running the Samples
-
-You will find a handful of samples in the repository under `python/IasPython/examples`, and a sample for the older ctypes wrapper under `python/PythonWrapper`. They can be executed in an environment with IasPython installed with the following command:
-
-```
-python <lr-sample-file>
-```
-The `_cli` samples take the application name, telemetry id and output folder as arguments:
-
-python sync_sample_cli.py appname 28b1df84-7568-4be8-afa7-3324434e1cea .
-
-python async_sample_cli.py appname 28b1df84-7568-4be8-afa7-3324434e1cea .
-
-The rest carry their configuration inline and take no arguments:
-
-python sync_sample.py
-
-python async_sample.py
-
-python sync_sample_all.py
-
-python async_sample_all.py
-
-```
+The same API is available as coroutines under `iaspython.aio`.
 
 # Developing the In-App Telemetry SDK
 
@@ -223,7 +163,7 @@ python async_sample_all.py
 
 ## Building a Package
 
-To build a a wheel and tar package, use the following command:
+To build a wheel and tar package, use the following command:
 
 ```
 poetry build
@@ -249,96 +189,12 @@ poetry env use <target_version>
 
 Poetry's docs contain further information on the use of this command.
 
-## Unit Tests
-
-To run the unit tests, use the following command:
-
-```
-poetry run pytest
-```
-
-## Documentation
-
-The API reference is built with Sphinx from the docstrings, and lives in
-`docs/`. Building it needs **Python 3.12 or newer** — Sphinx 9 does not support
-3.11, which this SDK still targets, so the `docs` dependency group carries a
-marker and resolves to nothing on 3.11.
-
-```
-poetry install --with docs
-poetry run sphinx-build -W -b html docs docs/_build/html
-```
-
-Open `docs/_build/html/index.html`. `-W` turns warnings into errors, which is
-how CI builds it; drop it to see the warnings without failing.
-
-The reference pages are `autoclass` directives, not hand-written member lists,
-so **adding, renaming or removing a method needs no edit here**. Only renaming
-or removing a whole class or module breaks the build, and `docs/configuration.md`
-pulls the "Configuration Notes" section out of this file by heading, so
-renaming that heading breaks the build too. Both are deliberate.
-
-### When pydoclint fails
-
-`pydoclint` checks that each docstring's `Args:`, `Returns:` and `Raises:`
-sections still agree with the function signature. It runs in pre-commit and in
-CI. There is **no baseline file** — the package is clean, so anything it reports
-is something this change introduced.
-
-Renaming or deleting a parameter without updating its docstring entry looks
-exactly like forgetting to write one, so an intentional API change will fail
-this check. That is the point. Normally the fix is to edit the docstring:
-
-```
-cd python/IasPython
-poetry run pydoclint iaspython
-```
-
-Two things that are *not* docstring bugs, and how they are handled:
-
-- **A raise that happens in a helper.** `Telemetry.attach()` documents
-  `TelemetryClosed` but raises it through `_check_initialized_or_raise()`, so
-  pydoclint sees a `Raises:` section over a body with no `raise` and reports
-  `DOC502`.
-- **A bare `raise` in a cleanup handler.** `TelemetrySession.attach()`
-  re-raises from `except BaseException` to release its claim, so pydoclint
-  believes the body raises `BaseException` and reports `DOC503`.
-
-Static analysis cannot see through either, and writing `Raises: BaseException`
-to satisfy it would make the published docs wrong. Those cases carry a
-suppression on the closing docstring line, with the reason in a comment beside
-them:
-
-```python
-    Raises:
-        TelemetryClosed: If Telemetry was closed.
-    """  # noqa: DOC502
-```
-
-Add one only when the docstring is right and the tool is wrong. If you are
-suppressing `DOC101` or `DOC103` — the args-versus-signature checks — stop and
-fix the docstring instead; those are the ones that catch real drift, and the
-only sanctioned exception is `TelemetryBase.__init__`, which hides three
-internal keyword-only arguments from the published constructor on purpose.
-
-To get a commit through mid-refactor: `SKIP=pydoclint git commit` skips just
-this hook, `git commit --no-verify` skips all of them. CI still checks.
-
-## Samples
-
-To run the samples, use the following command:
-
-```
-poetry run python examples\async_sample_cli.py python-app 28b1df84-7568-4be8-afa7-3324434e1cea .
-```
-
-
 ## Update Dependencies
 
 To update dependencies open the pyproject.toml file and update the minimum required version number and use poetry to update.
 
 - To see all the outdated packages: poetry show --outdated --top-level
-- To see only the outdated packages in LR sdk: poetry show --outdated --top-level --only=main
+- To see only the outdated packages in this SDK: poetry show --outdated --top-level --only=main
 - Open the pyproject.toml file
 - Make your change - ex. 'aiohttp = "^3.9.2"' to 'aiohttp = "^3.9.4"'
 - Open a cmd prompt where the pyproject.toml is located
