@@ -7,12 +7,50 @@ interface and relies on no C/C++ shared library.
 
 The In-App Telemetry Python SDK is currently at version `1.0.0.0`.
 
+# Using In-App Telemetry
+
+## Installation
+
+The package is published as `IasPython` (import name `iaspython`). Versions
+are four-part (`MAJOR.MINOR.BUILD.HOTFIX`); pip installs the latest build for
+your Python version (3.11+) unless you pin one.
+
+```
+pip install <iaspython-wheel>
+
+pip uninstall IasPython
+```
+
+With Poetry:
+
+```
+poetry add <iaspython-wheel>
+```
+
+## Quick Usage
+
+```python
+from iaspython.sync import Telemetry
+
+config = {
+    "AppName": "python-app",
+    "AppVersion": "1.0",
+    "TelemetryId": "28b1df84-7568-4be8-afa7-3324434e1cea",
+}
+
+with Telemetry(config) as telemetry:
+    telemetry.record_event("AppStarted")
+    telemetry.flush()
+```
+
+The same API is available as coroutines under `iaspython.aio`.
+
 ## Configuration Notes
 
 <details>
 <summary>Click to expand configuration details</summary>
 
-Version `1.0.0.0` uploads telemetry as SKR records. A few options are worth knowing about.
+A few configuration options are worth knowing about.
 
 **`TelemetryId` is your application's own id,** provisioned by Governance and
 baked into your build.
@@ -32,7 +70,7 @@ IASPYTHON_POLICY_TELEMETRY_ID=<dev-guid> python my_app.py
 This is a development setting and is not for production. The SDK logs a
 warning whenever it honors one, and ignores a value that is not a GUID.
 
-**`CollectorUrl` is the full base URL of the collector.** The SDK appends only
+`CollectorUrl` is the full base URL of the collector. The SDK appends only
 `records` to it.
 
 It is optional, and overrides the `_endpoint` the policy document supplies.
@@ -45,13 +83,11 @@ all: a policy that supplies no `_endpoint` retires the agent, and recorded
 data is then discarded rather than queued. `CollectorUrl` overrides that
 decision, which is why the SDK's own tests set it.
 
-It overrides the endpoint and nothing else. A flush still needs a policy to
-load, so if none can be fetched or read from cache the data is saved to disk
-and retried whatever `CollectorUrl` says. `_endpoint.backoff` still throttles
-how often the SDK uploads, so a sample run twice in quick succession may not
-upload the second time.
-
-**TLS is always verified, and there is no option to turn it off.**
+It overrides the endpoint and nothing else. Flushing still needs a policy —
+if none can be fetched or read from cache, the data is saved to disk and
+retried later regardless of `CollectorUrl`. `_endpoint.backoff` also still
+throttles how often the SDK uploads, so running a sample twice in quick
+succession may not upload the second time.
 
 **On the async SDK, `attach_file()` must be awaited.** Everything that touches
 the disk or the network is a coroutine in `iaspython.aio`, and
@@ -108,51 +144,14 @@ it to a readable name before attaching.
 `attach()` has no source file, since the SDK writes the payload into the store
 itself, so the attachment's `name` is sent instead.
 
-**A configured `InternetProxy` is the only route to the cloud.** An
-application that names a proxy is taken to mean that telemetry goes through
-that proxy or not at all. If the proxy is unreachable, flushes save to disk and
-are retried later, exactly as they are when the network is down. Check that
+**`InternetProxy` is optional, but setting it makes it mandatory.** Leave it
+out and the SDK connects to the cloud directly. Set it and telemetry goes
+through that proxy or not at all — there is no fallback to a direct
+connection. If the proxy is unreachable, flushes save to disk and are retried
+later, exactly as they are when the network is down. Check that
 `InternetProxy` is correct when telemetry stops arriving.
 
 </details>
-
-# Using In-App Telemetry
-
-## Installation
-
-The package is published as `IasPython` (import name `iaspython`). Versions
-are four-part (`MAJOR.MINOR.BUILD.HOTFIX`); pip installs the latest build for
-your Python version (3.11+) unless you pin one.
-
-```
-pip install <iaspython-wheel>
-
-pip uninstall IasPython
-```
-
-With Poetry:
-
-```
-poetry add <iaspython-wheel>
-```
-
-## Quick Usage
-
-```python
-from iaspython.sync import Telemetry
-
-config = {
-    "AppName": "python-app",
-    "AppVersion": "1.0",
-    "TelemetryId": "28b1df84-7568-4be8-afa7-3324434e1cea",
-}
-
-with Telemetry(config) as telemetry:
-    telemetry.record_event("AppStarted")
-    telemetry.flush()
-```
-
-The same API is available as coroutines under `iaspython.aio`.
 
 # Developing the In-App Telemetry SDK
 
