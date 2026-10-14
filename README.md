@@ -3,10 +3,6 @@
 An In-App Telemetry SDK implemented entirely in Python. It exposes a pythonic
 interface and relies on no C/C++ shared library.
 
-## Version
-
-The In-App Telemetry Python SDK is currently at version `1.0.0.0`.
-
 # Using In-App Telemetry
 
 ## Installation
