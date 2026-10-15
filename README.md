@@ -1,4 +1,4 @@
-# In-App Telemetry Python SDK
+# Intel&reg; Product Improvement Program - Python SDK
 
 An In-App Telemetry SDK implemented entirely in Python. It exposes a pythonic
 interface and relies on no C/C++ shared library.
